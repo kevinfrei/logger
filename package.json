@@ -1,6 +1,6 @@
 {
   "name": "@freik/logger",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A simple (typed!) wrapper around 'debug'",
   "author": "Kevin Frei (kevinfrei@hotmail.com)",
   "license": "Unlicense",
@@ -8,34 +8,39 @@
     "url": "https://github.com/kevinfrei/logger/issues"
   },
   "homepage": "https://github.com/kevinfrei/logger#readme",
-  "keywords": [
-    "js-utils",
-    "logging",
-    "logger",
-    "typescript"
-  ],
+  "keywords": ["js-utils", "logging", "logger", "typescript"],
   "repository": "github:kevinfrei/logger",
-  "module": "./lib/index.js",
-  "types": "./lib/index.d.ts",
+  "module": "./lib/esm/index.js",
+  "main": "./lib/cjs/index.js",
+  "types": "./lib/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js"
+    }
+  },
   "scripts": {
     "test": "jest --config jestconfig.json",
     "watch": "jest --watch --config jestconfig.json",
-    "clean": "rimraf lib .tsbuildinfo",
-    "release": "yarn clean && tsc --project tsconfig.opt.json && yarn ftool minify -i -r lib",
-    "build": "tsc --project tsconfig.json",
+    "clean": "rimraf lib .*.tsbuildinfo",
+    "cjscompat": "echo '{\"type\":\"commonjs\"}'> ./lib/cjs/package.json",
+    "esmcompat": "echo '{\"type\":\"module\"}'> ./lib/esm/package.json",
+    "compat": "yarn cjscompat && yarn esmcompat",
+    "release": "yarn clean && tsc --project tsconfig.cjs.opt.json && tsc --project tsconfig.esm.opt.json && yarn ftool minify -i -r lib && yarn compat",
+    "build": "tsc --project tsconfig.cjs.json && tsc --project tsconfig.esm.json && yarn compat",
     "cleanbuild": "yarn clean && yarn build",
     "postinstall": "husky install",
     "prepublishOnly": "yarn test && yarn lint && yarn pinst --disable",
     "postpublish": "yarn pinst --enable",
     "prepare": "yarn release",
-    "format": "yarn run prettier -w package.json src/**/*.ts",
+    "format": "yarn run prettier -w *.json src/**/*.ts",
     "lint": "eslint --fix --ext .ts src",
     "preversion": "yarn lint",
     "version": "yarn format && git add -A src",
     "postversion": "git push && git push --tags --no-verify",
-    "compile": "tsc --noEmit --project tsconfig.json",
+    "compile": "tsc --noEmit --project tsconfig.cjs.json && tsc --noEmit --project tsconfig.esm.json",
     "chk": "yarn format && yarn lint && yarn compile && yarn test",
-    "doc": "typedoc ./src/index.ts --readme none --tsconfig tsconfig.json"
+    "doc": "typedoc ./src/index.ts --readme none --tsconfig tsconfig.esm.json"
   },
   "devDependencies": {
     "@freik/build-tools": "^3.6.0",
@@ -58,9 +63,7 @@
     "typedoc-plugin-markdown": "^3.15.3",
     "typescript": "5.0.4"
   },
-  "files": [
-    "lib/*"
-  ],
+  "files": ["lib/*"],
   "engines": {
     "node": "^14.13.1 || >= 16.0.0"
   },
